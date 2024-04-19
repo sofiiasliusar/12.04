@@ -1,4 +1,5 @@
 from pygame import *
+from level import level
 
 W,H = 1280,720
 win = display.set_mode((W,H))
@@ -36,7 +37,30 @@ class Player(Settings):
         if keys[K_s]:
             self.rect.y +=self.speed
           
+
+class Camera(): #the field of vision
+    def __init__(self,camera_func, w, h):
+        self.camera_func = camera_func
+        self.state = Rect(0,0,w,h)
         
+    def apply(self, target):
+        return target.rect.move(self.state.topleft)
+    
+    def update(self,target):
+        self.state = self.camera_func(self.state, target.rect)
+    #function will move everything
+    # can write for_ in range, _can be a variable "empty variable"
+    def camera_config(camera, target_rect): 
+        l,t,_,_ = target_rect
+        _,_,w,h = camera # we need empty variables because camera returns 4 arguments, so that the program doesn't argue with us
+        l, t= -1 + W/2, -t + H/2
+        l = min (0, l)
+        t = min(0, t)
+        l = max(-(camera.width - W), 1)
+        t = max(-(camera.height - H), t)
+        t = min(0, t)
+        
+        return Rect(l,t,w,h) #t-top
 #TODO_IMAGES
 background = 'images/bgr.png'
 img_coin = 'images/coin.png'
@@ -56,19 +80,57 @@ img_hero = 'images/sprite1.png'
 
 #TODO_SOUNDS
 
+#TO_DO_OBJECTS
+player = Player(300, 650, 50, 50, 5, img_hero)
+#TODO_GROUPS
+blocks_r = []
+blocks_l = []
+coins = []
+stairs = []
+platforms = []
+
+items = sprite.Group()
+
 #TODO_IMAGES
 
 #TODO_SPRITES
 
 player = Player(300,650,50,50,5, img_hero)
+
+#TODO_GAME
+win.blit(bg, (0,0))
+x = y = 0
+for r in level:
+    for c in r:
+        if c == "r":
+            r1 = Settings(x,y,40,40,0, img_nothing) #air block, as in minecraft. Each block has a coordinate
+            r1.reset()
+        if c == "l":
+            r2 = Settings(x,y,40,40,0, img_nothing)
+            r2.reset()
+        if c == '/':
+            r3 = Settings(x,y-40,40,180,0, img_stair)
+            r3.reset()
+        if c == '°':
+            r4 = Settings(x,y,40,40,0,img_coin)
+            r4.reset()
+        if c == "-":
+            r5 = Settings(x,y,40,40,0,img_platform)
+            r5.reset()
+        x+=40 # start with top pixes and paint each block 1 by 1
+    y+=40  # go back and do y, while x =   
+    x = 0
+            
+
 game = True
-while game:
-    win.blit(bg, (0,0)) 
+while game: 
     # from top left corner (in kivy bottom), to the bottom + by y-coordinate
     for e in event.get():
         if e.type == QUIT:
             game = False 
     player.u_d()        
     player.l_r() 
-    player.reset()       
+    player.reset()
+    # time.delay(15)
+    # after adding TO_DO_GAME block of code, uncomented player leaves a trace, because the level is not being repainted
     display.update()
